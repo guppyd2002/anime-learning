@@ -7,7 +7,10 @@ import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import AddChildForm from "./AddChildForm"
+import ClearTasksButton from "./ClearTasksButton"
+import VideosTab from "./VideosTab"
 
 export default async function DashboardPage() {
   const { userId } = await auth()
@@ -64,73 +67,90 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
-      {/* 孩子卡片 */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {childrenWithStats.map((child) => (
-          <Card key={child.id} className="bg-zinc-900 border-zinc-800">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <span className="text-2xl">{child.avatar}</span>
-                <span>{child.name}</span>
-                <Badge variant="outline" className="text-xs">{child.age}歲</Badge>
-              </CardTitle>
-              <span className="text-yellow-400 font-bold">⭐ {child.totalPoints}</span>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* 今日任務 */}
-              <div>
-                <p className="text-xs text-zinc-500 mb-1">今日任務</p>
-                {child.totalTasks > 0 ? (
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-yellow-400 rounded-full transition-all"
-                        style={{ width: `${(child.completedToday / child.totalTasks) * 100}%` }}
-                      />
-                    </div>
-                    <span className="text-xs text-zinc-400">{child.completedToday}/{child.totalTasks}</span>
-                  </div>
-                ) : (
-                  <p className="text-xs text-zinc-600">今日尚無任務</p>
-                )}
-              </div>
+      <Tabs defaultValue="children">
+        <TabsList>
+          <TabsTrigger value="children">👶 孩子管理</TabsTrigger>
+          <TabsTrigger value="videos">🎬 影片管理</TabsTrigger>
+        </TabsList>
 
-              {/* 近期錄音 */}
-              {child.recentRecordings.length > 0 && (
-                <div>
-                  <p className="text-xs text-zinc-500 mb-2">近期錄音</p>
-                  <div className="space-y-2">
-                    {child.recentRecordings.map((rec) => (
-                      <div key={rec.id} className="flex items-center justify-between bg-zinc-800 rounded px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          <audio src={rec.blobUrl} controls className="h-6 w-32" />
-                          {rec.accuracyScore != null && (
-                            <Badge className={rec.accuracyScore >= 80 ? "bg-green-700" : rec.accuracyScore >= 60 ? "bg-yellow-700" : "bg-red-800"}>
-                              {Math.round(rec.accuracyScore)}分
-                            </Badge>
-                          )}
+        {/* 孩子 tab */}
+        <TabsContent value="children" className="mt-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            {childrenWithStats.map((child) => (
+              <Card key={child.id} className="bg-zinc-900 border-zinc-800">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
+                    <span className="text-2xl">{child.avatar}</span>
+                    <span>{child.name}</span>
+                    <Badge variant="outline" className="text-xs">{child.age}歲</Badge>
+                  </CardTitle>
+                  <span className="text-yellow-400 font-bold">⭐ {child.totalPoints}</span>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* 今日任務 */}
+                  <div>
+                    <p className="text-xs text-zinc-500 mb-1">今日任務</p>
+                    {child.totalTasks > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-yellow-400 rounded-full transition-all"
+                            style={{ width: `${(child.completedToday / child.totalTasks) * 100}%` }}
+                          />
                         </div>
-                        <span className="text-xs text-zinc-500">
-                          {rec.createdAt ? new Date(rec.createdAt).toLocaleDateString("zh-TW") : ""}
-                        </span>
+                        <span className="text-xs text-zinc-400">{child.completedToday}/{child.totalTasks}</span>
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-xs text-zinc-600">今日尚無任務</p>
+                    )}
                   </div>
-                </div>
-              )}
 
-              <Link href={`/learn/${child.id}`}>
-                <Button className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold mt-2">
-                  切換到 {child.name} 的學習頁
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        ))}
+                  {/* 近期錄音 */}
+                  {child.recentRecordings.length > 0 && (
+                    <div>
+                      <p className="text-xs text-zinc-500 mb-2">近期錄音</p>
+                      <div className="space-y-2">
+                        {child.recentRecordings.map((rec) => (
+                          <div key={rec.id} className="flex items-center justify-between bg-zinc-800 rounded px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              <audio src={rec.blobUrl} controls className="h-6 w-32" />
+                              {rec.accuracyScore != null && (
+                                <Badge className={rec.accuracyScore >= 80 ? "bg-green-700" : rec.accuracyScore >= 60 ? "bg-yellow-700" : "bg-red-800"}>
+                                  {Math.round(rec.accuracyScore)}分
+                                </Badge>
+                              )}
+                            </div>
+                            <span className="text-xs text-zinc-500">
+                              {rec.createdAt ? new Date(rec.createdAt).toLocaleDateString("zh-TW") : ""}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
-        {/* 新增孩子 */}
-        <AddChildForm />
-      </div>
+                  <div className="flex gap-2 mt-2">
+                    <Link href={`/learn/${child.id}`} className="flex-1">
+                      <Button className="w-full bg-yellow-500 hover:bg-yellow-400 text-black font-bold">
+                        切換到 {child.name} 的學習頁
+                      </Button>
+                    </Link>
+                    <ClearTasksButton childId={child.id} childName={child.name} />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+
+            {/* 新增孩子 */}
+            <AddChildForm />
+          </div>
+        </TabsContent>
+
+        {/* 影片 tab */}
+        <TabsContent value="videos" className="mt-6">
+          <VideosTab />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
