@@ -6,7 +6,9 @@ import { recordings, points, dailyTasks } from "@/lib/db/schema"
 import { eq, and } from "drizzle-orm"
 import OpenAI from "openai"
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+function getOpenAI() {
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+}
 
 function calcAccuracy(transcript: string, target: string): number {
   const t = transcript.toLowerCase().replace(/[^a-z\s]/g, "").trim()
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
   })
 
   // 2. Whisper 轉文字
-  const transcription = await openai.audio.transcriptions.create({
+  const transcription = await getOpenAI().audio.transcriptions.create({
     file: audio,
     model: "whisper-1",
     language: "en",
@@ -44,7 +46,7 @@ export async function POST(req: Request) {
   const accuracyScore = calcAccuracy(transcript, targetText)
 
   // 4. Claude 批改建議
-  const chatRes = await openai.chat.completions.create({
+  const chatRes = await getOpenAI().chat.completions.create({
     model: "gpt-4o-mini",
     messages: [
       {
