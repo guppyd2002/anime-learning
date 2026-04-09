@@ -1,8 +1,9 @@
 import { auth } from "@clerk/nextjs/server"
 import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
-import { dailyTasks, childProfiles } from "@/lib/db/schema"
+import { dailyTasks, childProfiles, recordings } from "@/lib/db/schema"
 import { eq, and } from "drizzle-orm"
+import { del } from "@vercel/blob"
 
 export async function DELETE(
   _req: Request,
@@ -22,6 +23,17 @@ export async function DELETE(
 
   if (!child) return NextResponse.json({ error: "Not found" }, { status: 404 })
 
+  // 取得所有錄音的 Blob URL，一次刪除
+  const recs = await db
+    .select({ blobUrl: recordings.blobUrl })
+    .from(recordings)
+    .where(eq(recordings.childProfileId, childId))
+
+  if (recs.length > 0) {
+    await del(recs.map((r) => r.blobUrl))
+  }
+
+  await db.delete(recordings).where(eq(recordings.childProfileId, childId))
   await db.delete(dailyTasks).where(eq(dailyTasks.childProfileId, childId))
 
   return NextResponse.json({ ok: true })
